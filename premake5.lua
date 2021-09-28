@@ -40,7 +40,8 @@ project "GLFW"
 
 		defines
 		{
-			"_GLFW_X11"
+			"_GLFW_X11",
+			"GLFW_EXPOSE_NATIVE_X11"
 		}
 
 	filter "system:windows"
@@ -63,7 +64,8 @@ project "GLFW"
 		defines 
 		{ 
 			"_GLFW_WIN32",
-			"_CRT_SECURE_NO_WARNINGS"
+			"_CRT_SECURE_NO_WARNINGS",
+			"GLFW_EXPOSE_NATIVE_WIN32"
 		}
 
 	filter "configurations:Debug"
@@ -77,16 +79,17 @@ project "GLFW"
 	filter 'system:macosx'
 		defines 
   		{
-			'_GLFW_COCOA'
+			"_GLFW_COCOA",
+			"GLFW_EXPOSE_NATIVE_COCOA"
 		}
 		files 
   		{
-			'third_party/glfw/src/cocoa_*.c',
-			'third_party/glfw/src/cocoa_*.m',
-			'third_party/glfw/src/nsgl_*.m',
-			'third_party/glfw/src/posix_*.c'
+			"third_party/glfw/src/cocoa_*.c",
+			"third_party/glfw/src/cocoa_*.m",
+			"third_party/glfw/src/nsgl_*.m",
+			"third_party/glfw/src/posix_*.c"
 		}
 		removefiles 
   		{
-			'third_party/glfw/src/posix_time.c'
+			"third_party/glfw/src/posix_time.c"
 		}
