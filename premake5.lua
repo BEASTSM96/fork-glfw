@@ -76,7 +76,7 @@ project "GLFW"
 		runtime "Release"
 		optimize "on"
 
-	filter 'system:macosx'
+	filter "system:macosx"
 		defines 
   		{
 			"_GLFW_COCOA",
