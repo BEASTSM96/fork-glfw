@@ -34,10 +34,12 @@
 
 
 //////////////////////////////////////////////////////////////////////////
-//////                       GLFW platform API                      //////
+//////                       GLFW internal API                      //////
 //////////////////////////////////////////////////////////////////////////
 
-void _glfwPlatformInitTimer(void)
+// Initialise timer
+//
+void _glfwInitTimerPOSIX(void)
 {
     _glfw.timer.posix.clock = CLOCK_REALTIME;
     _glfw.timer.posix.frequency = 1000000000;
@@ -48,6 +50,11 @@ void _glfwPlatformInitTimer(void)
         _glfw.timer.posix.clock = CLOCK_MONOTONIC;
 #endif
 }
+
+
+//////////////////////////////////////////////////////////////////////////
+//////                       GLFW platform API                      //////
+//////////////////////////////////////////////////////////////////////////
 
 uint64_t _glfwPlatformGetTimerValue(void)
 {

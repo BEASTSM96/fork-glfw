@@ -36,15 +36,16 @@
 #include <assert.h>
 
 
-// NOTE: The global variables below comprise all mutable global data in GLFW
-//       Any other mutable global variable is a bug
+// The global variables below comprise all mutable global data in GLFW
+//
+// Any other global variable is a bug
 
-// This contains all mutable state shared between compilation units of GLFW
+// Global state shared between compilation units of GLFW
 //
 _GLFWlibrary _glfw = { GLFW_FALSE };
 
 // These are outside of _glfw so they can be used before initialization and
-// after termination without special handling when _glfw is cleared to zero
+// after termination
 //
 static _GLFWerror _glfwMainThreadError;
 static GLFWerrorfun _glfwErrorCallback;
@@ -53,8 +54,6 @@ static _GLFWinitconfig _glfwInitHints =
 {
     GLFW_TRUE,      // hat buttons
     GLFW_ANGLE_PLATFORM_TYPE_NONE, // ANGLE backend
-    GLFW_ANY_PLATFORM, // preferred platform
-    NULL,           // vkGetInstanceProcAddr function
     {
         GLFW_TRUE,  // macOS menu bar
         GLFW_TRUE   // macOS bundle chdir
@@ -103,7 +102,7 @@ static void terminate(void)
     {
         _GLFWmonitor* monitor = _glfw.monitors[i];
         if (monitor->originalRamp.size)
-            _glfw.platform.setGammaRamp(monitor, &monitor->originalRamp);
+            _glfwPlatformSetGammaRamp(monitor, &monitor->originalRamp);
         _glfwFreeMonitor(monitor);
     }
 
@@ -116,8 +115,8 @@ static void terminate(void)
     _glfw.mappingCount = 0;
 
     _glfwTerminateVulkan();
-    _glfw.platform.terminateJoysticks();
-    _glfw.platform.terminate();
+    _glfwPlatformTerminateJoysticks();
+    _glfwPlatformTerminate();
 
     _glfw.initialized = GLFW_FALSE;
 
@@ -275,8 +274,6 @@ void _glfwInputError(int code, const char* format, ...)
             strcpy(description, "The requested feature cannot be implemented for this platform");
         else if (code == GLFW_FEATURE_UNIMPLEMENTED)
             strcpy(description, "The requested feature has not yet been implemented for this platform");
-        else if (code == GLFW_PLATFORM_UNAVAILABLE)
-            strcpy(description, "The requested platform is unavailable");
         else
             strcpy(description, "ERROR: UNKNOWN GLFW ERROR");
     }
@@ -325,10 +322,7 @@ GLFWAPI int glfwInit(void)
         _glfw.allocator.deallocate = defaultDeallocate;
     }
 
-    if (!_glfwSelectPlatform(_glfw.hints.init.platformID, &_glfw.platform))
-        return GLFW_FALSE;
-
-    if (!_glfw.platform.init())
+    if (!_glfwPlatformInit())
     {
         terminate();
         return GLFW_FALSE;
@@ -346,10 +340,8 @@ GLFWAPI int glfwInit(void)
 
     _glfwInitGamepadMappings();
 
-    _glfwPlatformInitTimer();
-    _glfw.timer.offset = _glfwPlatformGetTimerValue();
-
     _glfw.initialized = GLFW_TRUE;
+    _glfw.timer.offset = _glfwPlatformGetTimerValue();
 
     glfwDefaultWindowHints();
     return GLFW_TRUE;
@@ -372,9 +364,6 @@ GLFWAPI void glfwInitHint(int hint, int value)
             return;
         case GLFW_ANGLE_PLATFORM_TYPE:
             _glfwInitHints.angleType = value;
-            return;
-        case GLFW_PLATFORM:
-            _glfwInitHints.platformID = value;
             return;
         case GLFW_COCOA_CHDIR_RESOURCES:
             _glfwInitHints.ns.chdir = value;
@@ -404,11 +393,6 @@ GLFWAPI void glfwInitAllocator(const GLFWallocator* allocator)
         memset(&_glfwInitAllocator, 0, sizeof(GLFWallocator));
 }
 
-GLFWAPI void glfwInitVulkanLoader(PFN_vkGetInstanceProcAddr loader)
-{
-    _glfwInitHints.vulkanLoader = loader;
-}
-
 GLFWAPI void glfwGetVersion(int* major, int* minor, int* rev)
 {
     if (major != NULL)
@@ -417,6 +401,11 @@ GLFWAPI void glfwGetVersion(int* major, int* minor, int* rev)
         *minor = GLFW_VERSION_MINOR;
     if (rev != NULL)
         *rev = GLFW_VERSION_REVISION;
+}
+
+GLFWAPI const char* glfwGetVersionString(void)
+{
+    return _glfwPlatformGetVersionString();
 }
 
 GLFWAPI int glfwGetError(const char** description)
@@ -445,7 +434,7 @@ GLFWAPI int glfwGetError(const char** description)
 
 GLFWAPI GLFWerrorfun glfwSetErrorCallback(GLFWerrorfun cbfun)
 {
-    _GLFW_SWAP(GLFWerrorfun, _glfwErrorCallback, cbfun);
+    _GLFW_SWAP_POINTERS(_glfwErrorCallback, cbfun);
     return cbfun;
 }
 
