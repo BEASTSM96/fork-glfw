@@ -1377,6 +1377,13 @@ void _glfwPlatformSetWindowDecorated(_GLFWwindow* window, GLFWbool enabled)
     } // autoreleasepool
 }
 
+void _glfwPlatformSetWindowTitlebar(_GLFWwindow* window, GLFWbool enabled)
+{
+    // TODO
+    _glfwInputError(GLFW_PLATFORM_ERROR,
+        "Cocoa: Window attribute setting not implemented yet");
+}
+
 void _glfwPlatformSetWindowFloating(_GLFWwindow* window, GLFWbool enabled)
 {
     @autoreleasepool {

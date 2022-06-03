@@ -1681,14 +1681,6 @@ static void processEvent(XEvent *event)
 
         case FocusIn:
         {
-            if (event->xfocus.mode == NotifyGrab ||
-                event->xfocus.mode == NotifyUngrab)
-            {
-                // Ignore focus events from popup indicator windows, window menu
-                // key chords and window dragging
-                return;
-            }
-
             if (window->cursorMode == GLFW_CURSOR_DISABLED)
                 disableCursor(window);
 
@@ -1701,14 +1693,6 @@ static void processEvent(XEvent *event)
 
         case FocusOut:
         {
-            if (event->xfocus.mode == NotifyGrab ||
-                event->xfocus.mode == NotifyUngrab)
-            {
-                // Ignore focus events from popup indicator windows, window menu
-                // key chords and window dragging
-                return;
-            }
-
             if (window->cursorMode == GLFW_CURSOR_DISABLED)
                 enableCursor(window);
 
@@ -3263,5 +3247,12 @@ GLFWAPI const char* glfwGetX11SelectionString(void)
     }
 
     return getSelectionString(_glfw.x11.PRIMARY);
+}
+
+void _glfwPlatformSetWindowTitlebar( _GLFWwindow* window, GLFWbool enabled )
+{
+	// TODO
+	_glfwInputError( GLFW_PLATFORM_UNAVAILABLE,
+		"X11: Window attribute setting not implemented yet" );
 }
 

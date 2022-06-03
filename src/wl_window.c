@@ -1792,6 +1792,13 @@ void _glfwSetWindowTitleWayland(_GLFWwindow* window, const char* title)
         xdg_toplevel_set_title(window->wl.xdg.toplevel, title);
 }
 
+void _glfwPlatformSetWindowTitlebar( _GLFWwindow* window, GLFWbool enabled )
+{
+	// TODO
+	_glfwInputError( GLFW_PLATFORM_ERROR,
+		"Wayland: Window attribute setting not implemented yet" );
+}
+
 void _glfwSetWindowIconWayland(_GLFWwindow* window,
                                int count, const GLFWimage* images)
 {

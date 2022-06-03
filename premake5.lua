@@ -61,6 +61,11 @@ project "GLFW"
 			"src/osmesa_context.c"
 		}
 
+		links 
+		{
+			"dwmapi"
+		}
+
 		defines 
 		{ 
 			"_GLFW_WIN32",

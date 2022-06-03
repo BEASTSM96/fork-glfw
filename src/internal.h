@@ -402,6 +402,7 @@ struct _GLFWwndconfig
     GLFWbool      resizable;
     GLFWbool      visible;
     GLFWbool      decorated;
+    GLFWbool      titlebar;
     GLFWbool      focused;
     GLFWbool      autoIconify;
     GLFWbool      floating;
@@ -526,6 +527,7 @@ struct _GLFWwindow
     // Window settings and state
     GLFWbool            resizable;
     GLFWbool            decorated;
+    GLFWbool            titlebar;
     GLFWbool            autoIconify;
     GLFWbool            floating;
     GLFWbool            focusOnShow;
@@ -555,6 +557,7 @@ struct _GLFWwindow
 
     struct {
         GLFWwindowposfun          pos;
+        GLFWtitlebarhittestfun    tbhittest;
         GLFWwindowsizefun         size;
         GLFWwindowclosefun        close;
         GLFWwindowrefreshfun      refresh;
@@ -899,6 +902,8 @@ void* _glfwPlatformLoadModule(const char* path);
 void _glfwPlatformFreeModule(void* module);
 GLFWproc _glfwPlatformGetModuleSymbol(void* module, const char* name);
 
+// TODO: Move this to the correct place in the new GLFW version.
+void _glfwPlatformSetWindowTitlebar( _GLFWwindow* window, GLFWbool enabled );
 
 //////////////////////////////////////////////////////////////////////////
 //////                         GLFW event API                       //////

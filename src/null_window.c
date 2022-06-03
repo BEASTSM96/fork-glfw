@@ -177,6 +177,10 @@ void _glfwPlatformSetWindowIcon(_GLFWwindow* window, int count,
 {
 }
 
+void _glfwPlatformSetWindowTitlebar( _GLFWwindow* window, GLFWbool enabled )
+{
+}
+
 void _glfwPlatformSetWindowMonitor(_GLFWwindow* window,
                                    _GLFWmonitor* monitor,
                                    int xpos, int ypos,
