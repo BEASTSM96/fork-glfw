@@ -3565,6 +3565,40 @@ GLFWAPI void glfwSetWindowSize(GLFWwindow* window, int width, int height);
  */
 GLFWAPI void glfwGetFramebufferSize(GLFWwindow* window, int* width, int* height);
 
+/*! @brief Sets the windows corner ID.
+ *
+ *  This function will set the id for the current hovered corner.
+ *
+ *  @param[in] window The window whose corner id to set.
+ *  @param[int] hit The ID.
+ *
+ *  @errors Possible errors include @ref GLFW_NOT_INITIALIZED.
+ *
+ *  @thread_safety This function must only be called from the main thread.
+ *
+ *  @since Added in version 3.0.
+ *
+ *  @ingroup window
+ */
+GLFWAPI void glfwSetCornerID( GLFWwindow* window, int hit );
+
+/*! @brief Retrieves the windows corner ID.
+ *
+ *  This function will retrieves the id for the current hovered corner.
+ *
+ *  @param[in] window The window whose corner id to query.
+ *  @param[out] hit The current ID.
+ *
+ *  @errors Possible errors include @ref GLFW_NOT_INITIALIZED.
+ *
+ *  @thread_safety This function must only be called from the main thread.
+ *
+ *  @since Added in version 3.0.
+ *
+ *  @ingroup window
+ */
+GLFWAPI void glfwGetCornerID( GLFWwindow* window, int* hit );
+
 /*! @brief Retrieves the size of the frame of the window.
  *
  *  This function retrieves the size, in screen coordinates, of each edge of the
