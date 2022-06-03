@@ -71,16 +71,6 @@ BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved)
 //
 static GLFWbool loadLibraries(void)
 {
-    if (!GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
-                                GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-                            (const WCHAR*) &_glfw,
-                            (HMODULE*) &_glfw.win32.instance))
-    {
-        _glfwInputErrorWin32(GLFW_PLATFORM_ERROR,
-                             "Win32: Failed to retrieve own module handle");
-        return GLFW_FALSE;
-    }
-
     _glfw.win32.user32.instance = _glfwPlatformLoadModule("user32.dll");
     if (!_glfw.win32.user32.instance)
     {
@@ -101,8 +91,6 @@ static GLFWbool loadLibraries(void)
         _glfwPlatformGetModuleSymbol(_glfw.win32.user32.instance, "GetDpiForWindow");
     _glfw.win32.user32.AdjustWindowRectExForDpi_ = (PFN_AdjustWindowRectExForDpi)
         _glfwPlatformGetModuleSymbol(_glfw.win32.user32.instance, "AdjustWindowRectExForDpi");
-    _glfw.win32.user32.GetSystemMetricsForDpi_ = (PFN_GetSystemMetricsForDpi)
-        _glfwPlatformGetModuleSymbol(_glfw.win32.user32.instance, "GetSystemMetricsForDpi");
 
     _glfw.win32.dinput8.instance = _glfwPlatformLoadModule("dinput8.dll");
     if (_glfw.win32.dinput8.instance)
@@ -263,6 +251,7 @@ static void createKeyTables(void)
     _glfw.win32.keycodes[0x151] = GLFW_KEY_PAGE_DOWN;
     _glfw.win32.keycodes[0x149] = GLFW_KEY_PAGE_UP;
     _glfw.win32.keycodes[0x045] = GLFW_KEY_PAUSE;
+    _glfw.win32.keycodes[0x146] = GLFW_KEY_PAUSE;
     _glfw.win32.keycodes[0x039] = GLFW_KEY_SPACE;
     _glfw.win32.keycodes[0x00F] = GLFW_KEY_TAB;
     _glfw.win32.keycodes[0x03A] = GLFW_KEY_CAPS_LOCK;
@@ -344,7 +333,7 @@ static GLFWbool createHelperWindow(void)
                         WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
                         0, 0, 1, 1,
                         NULL, NULL,
-                        _glfw.win32.instance,
+                        GetModuleHandleW(NULL),
                         NULL);
 
     if (!_glfw.win32.helperWindowHandle)
@@ -494,7 +483,7 @@ void _glfwUpdateKeyNamesWin32(void)
             vk = vks[key - GLFW_KEY_KP_0];
         }
         else
-            vk = MapVirtualKeyW(scancode, MAPVK_VSC_TO_VK);
+            vk = MapVirtualKey(scancode, MAPVK_VSC_TO_VK);
 
         length = ToUnicode(vk, scancode, state,
                            chars, sizeof(chars) / sizeof(WCHAR),
@@ -502,8 +491,6 @@ void _glfwUpdateKeyNamesWin32(void)
 
         if (length == -1)
         {
-            // This is a dead key, so we need a second simulated key press
-            // to make it output its own character (usually a diacritic)
             length = ToUnicode(vk, scancode, state,
                                chars, sizeof(chars) / sizeof(WCHAR),
                                0);
@@ -519,8 +506,7 @@ void _glfwUpdateKeyNamesWin32(void)
     }
 }
 
-// Replacement for IsWindowsVersionOrGreater, as we cannot rely on the
-// application having a correct embedded manifest
+// Replacement for IsWindowsVersionOrGreater as MinGW lacks versionhelpers.h
 //
 BOOL _glfwIsWindowsVersionOrGreaterWin32(WORD major, WORD minor, WORD sp)
 {
@@ -620,6 +606,7 @@ GLFWbool _glfwConnectWin32(int platformID, _GLFWplatform* platform)
         _glfwWaitEventsWin32,
         _glfwWaitEventsTimeoutWin32,
         _glfwPostEmptyEventWin32,
+        _glfwSetWindowTitlebarWin32,
         _glfwGetEGLPlatformWin32,
         _glfwGetEGLNativeDisplayWin32,
         _glfwGetEGLNativeWindowWin32,
@@ -640,7 +627,7 @@ int _glfwInitWin32(void)
     createKeyTables();
     _glfwUpdateKeyNamesWin32();
 
-    if (_glfwIsWindows10Version1703OrGreaterWin32())
+    if (_glfwIsWindows10CreatorsUpdateOrGreaterWin32())
         SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
     else if (IsWindows8Point1OrGreater())
         SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
@@ -672,7 +659,6 @@ void _glfwTerminateWin32(void)
 
     _glfwTerminateWGL();
     _glfwTerminateEGL();
-    _glfwTerminateOSMesa();
 
     freeLibraries();
 }

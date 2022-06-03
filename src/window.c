@@ -88,10 +88,10 @@ void _glfwInputWindowSize(_GLFWwindow* window, int width, int height)
 
 // Notifies shared code that mouse hittest needs to be resolved
 //
-void _glfwInputTitleBarHitTest( _GLFWwindow* window, int posX, int posY, int* hit )
+void _glfwInputTitleBarHitTest(_GLFWwindow* window, int posX, int posY, int* hit)
 {
-	if( window->callbacks.tbhittest )
-		window->callbacks.tbhittest( ( GLFWwindow* ) window, posX, posY, hit );
+    if (window->callbacks.tbhittest)
+        window->callbacks.tbhittest((GLFWwindow*)window, posX, posY, hit);
 }
 
 // Notifies shared code that a window has been iconified or restored
@@ -208,7 +208,6 @@ GLFWAPI GLFWwindow* glfwCreateWindow(int width, int height,
     window->monitor          = (_GLFWmonitor*) monitor;
     window->resizable        = wndconfig.resizable;
     window->decorated        = wndconfig.decorated;
-    window->titlebar         = wndconfig.titlebar;
     window->autoIconify      = wndconfig.autoIconify;
     window->floating         = wndconfig.floating;
     window->focusOnShow      = wndconfig.focusOnShow;
@@ -224,10 +223,38 @@ GLFWAPI GLFWwindow* glfwCreateWindow(int width, int height,
     window->numer       = GLFW_DONT_CARE;
     window->denom       = GLFW_DONT_CARE;
 
+    // Open the actual window and create its context
     if (!_glfw.platform.createWindow(window, &wndconfig, &ctxconfig, &fbconfig))
     {
         glfwDestroyWindow((GLFWwindow*) window);
         return NULL;
+    }
+
+    if (ctxconfig.client != GLFW_NO_API)
+    {
+        if (!_glfwRefreshContextAttribs(window, &ctxconfig))
+        {
+            glfwDestroyWindow((GLFWwindow*) window);
+            return NULL;
+        }
+    }
+
+    if (wndconfig.mousePassthrough)
+        _glfw.platform.setWindowMousePassthrough(window, GLFW_TRUE);
+
+    if (window->monitor)
+    {
+        if (wndconfig.centerCursor)
+            _glfwCenterCursorInContentArea(window);
+    }
+    else
+    {
+        if (wndconfig.visible)
+        {
+            _glfw.platform.showWindow(window);
+            if (wndconfig.focused)
+                _glfw.platform.focusWindow(window);
+        }
     }
 
     return (GLFWwindow*) window;
@@ -334,8 +361,8 @@ GLFWAPI void glfwWindowHint(int hint, int value)
             _glfw.hints.window.decorated = value ? GLFW_TRUE : GLFW_FALSE;
             return;
         case GLFW_TITLEBAR:
-			_glfw.hints.window.titlebar = value ? GLFW_TRUE : GLFW_FALSE;
-			return;
+            _glfw.hints.window.titlebar = value ? GLFW_TRUE : GLFW_FALSE;
+            return;
         case GLFW_FOCUSED:
             _glfw.hints.window.focused = value ? GLFW_TRUE : GLFW_FALSE;
             return;
@@ -499,33 +526,12 @@ GLFWAPI void glfwSetWindowTitle(GLFWwindow* handle, const char* title)
 GLFWAPI void glfwSetWindowIcon(GLFWwindow* handle,
                                int count, const GLFWimage* images)
 {
-    int i;
     _GLFWwindow* window = (_GLFWwindow*) handle;
-
     assert(window != NULL);
     assert(count >= 0);
     assert(count == 0 || images != NULL);
 
     _GLFW_REQUIRE_INIT();
-
-    if (count < 0)
-    {
-        _glfwInputError(GLFW_INVALID_VALUE, "Invalid image count for window icon");
-        return;
-    }
-
-    for (i = 0; i < count; i++)
-    {
-        assert(images[i].pixels != NULL);
-
-        if (images[i].width <= 0 || images[i].height <= 0)
-        {
-            _glfwInputError(GLFW_INVALID_VALUE,
-                            "Invalid image dimensions for window icon");
-            return;
-        }
-    }
-
     _glfw.platform.setWindowIcon(window, count, images);
 }
 
@@ -845,8 +851,8 @@ GLFWAPI int glfwGetWindowAttrib(GLFWwindow* handle, int attrib)
             return window->resizable;
         case GLFW_DECORATED:
             return window->decorated;
-         case GLFW_TITLEBAR:
-			return window->titlebar;
+        case GLFW_TITLEBAR:
+            return _glfw.hints.window.titlebar;
         case GLFW_FLOATING:
             return window->floating;
         case GLFW_AUTO_ICONIFY:
@@ -906,17 +912,19 @@ GLFWAPI void glfwSetWindowAttrib(GLFWwindow* handle, int attrib, int value)
             window->decorated = value;
             if (!window->monitor)
                 _glfw.platform.setWindowDecorated(window, value);
-            return;
+		case GLFW_TITLEBAR:
+			if (_glfw.hints.window.titlebar == value)
+            	return;
 
+            _glfw.hints.window.titlebar = value;
+    	    if (!window->monitor)
+                _glfw.platform.setWindowTitleBar(window, value);
+            return;
         case GLFW_FLOATING:
             window->floating = value;
             if (!window->monitor)
                 _glfw.platform.setWindowFloating(window, value);
             return;
-
-		case GLFW_TITLEBAR:
-			if( _glfw.hints.window.titlebar == value )
-				return;
 
         case GLFW_FOCUS_ON_SHOW:
             window->focusOnShow = value;
@@ -1006,6 +1014,16 @@ GLFWAPI GLFWwindowposfun glfwSetWindowPosCallback(GLFWwindow* handle,
     _GLFW_REQUIRE_INIT_OR_RETURN(NULL);
     _GLFW_SWAP(GLFWwindowposfun, window->callbacks.pos, cbfun);
     return cbfun;
+}
+
+GLFWAPI GLFWtitlebarhittestfun glfwSetTitlebarHitTestCallback(GLFWwindow* handle, GLFWtitlebarhittestfun tbhtfun)
+{
+    _GLFWwindow* window = (_GLFWwindow*)handle;
+    assert(window != NULL);
+
+    _GLFW_REQUIRE_INIT_OR_RETURN(NULL);
+    _GLFW_SWAP(GLFWtitlebarhittestfun, window->callbacks.tbhittest, tbhtfun);
+    return tbhtfun;
 }
 
 GLFWAPI GLFWwindowsizefun glfwSetWindowSizeCallback(GLFWwindow* handle,
@@ -1130,14 +1148,3 @@ GLFWAPI void glfwPostEmptyEvent(void)
     _glfw.platform.postEmptyEvent();
 }
 
-GLFWAPI GLFWtitlebarhittestfun glfwSetTitlebarHitTestCallback( GLFWwindow* handle, GLFWtitlebarhittestfun tbhtfun ) 
-{
-	_GLFWwindow* window = (_GLFWwindow*) handle;
-	assert(window != NULL);
-
-	_GLFW_REQUIRE_INIT_OR_RETURN(NULL);
-	
-	_GLFW_SWAP(GLFWtitlebarhittestfun, window->callbacks.tbhittest, tbhtfun);
-
-	return tbhtfun;
-}
