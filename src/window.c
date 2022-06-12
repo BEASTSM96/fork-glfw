@@ -665,27 +665,6 @@ GLFWAPI void glfwSetWindowAspectRatio(GLFWwindow* handle, int numer, int denom)
     _glfw.platform.setWindowAspectRatio(window, numer, denom);
 }
 
-GLFWAPI void glfwSetCornerID(GLFWwindow* handle, int hit) 
-{
-    _GLFWwindow* window = ( _GLFWwindow* )handle;
-	assert(window != NULL);
-
-    _GLFW_REQUIRE_INIT();
-	window->cornerID = hit;
-}
-
-GLFWAPI void glfwGetCornerID( GLFWwindow* handle, int* hit )
-{
-	_GLFWwindow* window = ( _GLFWwindow* ) handle;
-	assert( window != NULL );
-	
-    if( hit )
-        *hit = 0;
-	
-	_GLFW_REQUIRE_INIT();
-	*hit = window->cornerID;
-}
-
 GLFWAPI void glfwGetFramebufferSize(GLFWwindow* handle, int* width, int* height)
 {
     _GLFWwindow* window = (_GLFWwindow*) handle;
