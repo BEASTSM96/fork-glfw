@@ -1,5 +1,5 @@
 project "GLFW"
-	kind "StaticLib"
+	kind "SharedLib"
 	language "C"
 
 	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
@@ -76,7 +76,8 @@ project "GLFW"
 		{ 
 			"_GLFW_WIN32",
 			"_CRT_SECURE_NO_WARNINGS",
-			"GLFW_EXPOSE_NATIVE_WIN32"
+			"GLFW_EXPOSE_NATIVE_WIN32",
+			"_GLFW_BUILD_DLL"
 		}
 
 	filter "configurations:Debug"
